@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
-    --background: 222 47% 2%; /* Near Black */
+    --background: 222 47% 2%;
     --foreground: 210 40% 98%;
     --card: 222 47% 6%;
-    --primary: 28 100% 60%; /* Saffron */
+    --primary: 28 100% 60%;
     --border: 217 32% 12%;
   }
 
@@ -20,25 +20,25 @@
 }
 
 @layer components {
-  /* High-end Sidebar Glassmorphism */
   .glass-sidebar {
-    @apply bg-[#0f172a]/60 border-r border-white/10;
+    @apply bg-[#0f172a]/70 border-r border-white/10;
     backdrop-filter: blur(32px) saturate(150%);
     box-shadow: 25px 0 50px -15px rgba(0, 0, 0, 0.7);
   }
 
-  /* Professional Popup Content */
-  .maplibregl-popup-content {
-    @apply bg-[#0f172a]/90 border border-white/10 rounded-2xl p-0 !important;
-    backdrop-filter: blur(12px);
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6) !important;
+  /* CRITICAL FIX: The Popup Styling */
+  .professional-popup .maplibregl-popup-content {
+    background-color: #0f172a !important; /* Force Dark Slate */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 0 !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8) !important;
   }
 
-  .maplibregl-popup-tip {
-    border-top-color: rgba(15, 23, 42, 0.9) !important;
+  .professional-popup .maplibregl-popup-tip {
+    border-top-color: #0f172a !important;
   }
 
-  /* UI Data Elements */
   .popup-inner {
     @apply p-5 min-w-[220px] flex flex-col;
   }
@@ -46,7 +46,7 @@
     @apply text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1;
   }
   .popup-val-container {
-    @apply flex items-baseline gap-2 mb-4;
+    @apply flex items-baseline gap-2 mb-2;
   }
   .popup-main-val {
     @apply text-3xl font-black text-white leading-none tracking-tighter;
@@ -55,12 +55,12 @@
     @apply text-[10px] font-bold text-orange-500;
   }
   .popup-stat {
-    @apply flex justify-between items-center pt-3 border-t border-white/5;
+    @apply flex justify-between items-center pt-3 border-t border-white/10 mt-2;
   }
   .stat-label {
     @apply text-[9px] font-bold text-slate-500 uppercase;
   }
   .stat-val {
-    @apply text-xs font-bold text-slate-200;
+    @apply text-xs font-bold text-white;
   }
 }
