@@ -18,12 +18,14 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
   const popup = useRef<maplibregl.Popup | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Update map data when filtered data changes
   const updateMapData = useCallback(() => {
     if (!map.current || !isLoaded) return;
 
     const source = map.current.getSource('indian-population') as maplibregl.GeoJSONSource;
     if (source) {
-      source.setData(toGeoJSON(data) as any);
+      const geoJSON = toGeoJSON(data);
+      source.setData(geoJSON as any);
     }
   }, [data, isLoaded]);
 
@@ -51,7 +53,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         data: toGeoJSON(data) as any,
       });
 
-      // Add heat map layer
+      // Add heat map layer with enhanced visibility
       map.current.addLayer({
         id: 'indian-population-heat',
         type: 'heatmap',
@@ -64,45 +66,50 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             ['linear'],
             ['get', 'indianPopulation'],
             0, 0,
-            50000, 0.5,
-            100000, 0.75,
-            250000, 1
+            50000, 0.3,
+            100000, 0.5,
+            300000, 0.8,
+            850000, 1
           ],
           // Increase the heatmap color weight by zoom level
           'heatmap-intensity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            0, 1,
+            0, 0.5,
+            5, 1.5,
             9, 3
           ],
-          // Color ramp for heatmap
+          // Color ramp for heatmap - vibrant saffron/orange theme
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
-            0, 'rgba(33, 102, 172, 0)',
-            0.2, 'rgba(103, 169, 207, 0.6)',
-            0.4, 'rgba(209, 229, 240, 0.7)',
-            0.6, 'rgba(253, 219, 199, 0.8)',
-            0.8, 'rgba(239, 138, 98, 0.9)',
-            1, 'rgba(255, 107, 53, 1)'
+            0, 'rgba(0, 0, 0, 0)',
+            0.1, 'rgba(103, 169, 207, 0.4)',
+            0.3, 'rgba(255, 235, 153, 0.6)',
+            0.5, 'rgba(255, 183, 77, 0.7)',
+            0.7, 'rgba(255, 138, 76, 0.85)',
+            0.9, 'rgba(255, 87, 34, 0.95)',
+            1, 'rgba(213, 0, 0, 1)'
           ],
-          // Adjust the heatmap radius by zoom level
+          // Larger radius for more visible heatmap
           'heatmap-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            0, 20,
-            5, 40,
-            9, 60
+            0, 30,
+            3, 50,
+            5, 70,
+            9, 90
           ],
           // Transition from heatmap to circle layer by zoom level
           'heatmap-opacity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            7, 1,
+            6, 1,
+            8, 0.6,
             9, 0
           ],
         },
