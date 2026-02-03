@@ -92,26 +92,26 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
               5, 2,
               9, 3
             ],
-            'heatmap-color': [
+          'heatmap-color': [
               'interpolate',
               ['linear'],
               ['heatmap-density'],
-              0, 'rgba(103, 169, 207, 0.25)',
-              0.02, 'rgba(103, 169, 207, 0.45)',
-              0.12, 'rgba(255, 235, 153, 0.65)',
-              0.35, 'rgba(255, 183, 77, 0.78)',
-              0.6, 'rgba(255, 138, 76, 0.9)',
-              0.85, 'rgba(255, 87, 34, 0.97)',
-              1, 'rgba(213, 0, 0, 1)'
+              0, 'rgba(0, 0, 0, 0)',
+              0.1, 'rgba(255, 152, 67, 0.4)',
+              0.3, 'rgba(255, 120, 50, 0.6)',
+              0.5, 'rgba(255, 87, 34, 0.75)',
+              0.7, 'rgba(244, 67, 54, 0.85)',
+              0.9, 'rgba(211, 47, 47, 0.95)',
+              1, 'rgba(183, 28, 28, 1)'
             ],
             'heatmap-radius': [
               'interpolate',
               ['linear'],
               ['zoom'],
-              0, 30,
-              3, 50,
-              5, 70,
-              9, 90
+              0, 25,
+              3, 40,
+              5, 55,
+              9, 70
             ],
             'heatmap-opacity': [
               'interpolate',
@@ -136,30 +136,31 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
               'interpolate',
               ['linear'],
               ['to-number', ['get', 'indianPopulation']],
-              10000, 4,
-              50000, 8,
-              100000, 12,
-              250000, 16,
-              850000, 22
+              10000, 5,
+              50000, 9,
+              100000, 13,
+              250000, 18,
+              850000, 24
             ],
             'circle-color': [
               'interpolate',
               ['linear'],
               ['to-number', ['get', 'percentIndian']],
-              0, '#67A9CF',
-              10, '#FDDB99',
-              20, '#EF8A62',
-              35, '#FF6B35'
+              0, '#FF8A65',
+              8, '#FF7043',
+              15, '#FF5722',
+              25, '#E64A19',
+              35, '#D84315'
             ],
-            'circle-stroke-color': '#ffffff',
-            'circle-stroke-width': 2,
+            'circle-stroke-color': 'rgba(255, 255, 255, 0.9)',
+            'circle-stroke-width': 1.5,
             'circle-opacity': [
               'interpolate',
               ['linear'],
               ['zoom'],
-              0, 0.35,
-              5, 0.55,
-              8, 0.9
+              0, 0.5,
+              5, 0.7,
+              8, 0.95
             ],
           },
         },
