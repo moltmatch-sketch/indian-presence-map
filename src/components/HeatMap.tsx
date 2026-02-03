@@ -19,9 +19,15 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
 
   const updateMapData = useCallback(() => {
     if (!map.current || !isLoaded) return;
-    const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
-    if (source) {
-      source.setData(toGeoJSON(data) as any);
+    // Guard against style not being ready (happens during HMR)
+    try {
+      if (!map.current.getStyle()) return;
+      const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
+      if (source) {
+        source.setData(toGeoJSON(data) as any);
+      }
+    } catch (error) {
+      console.warn("Map not ready for data update:", error);
     }
   }, [data, isLoaded]);
 
