@@ -18,10 +18,19 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
   const [isLoaded, setIsLoaded] = useState(false);
 
   const updateMapData = useCallback(() => {
+    // During initial load and during style reloads (common with HMR), MapLibre's
+    // internal `style` can be temporarily undefined; calling getSource() then throws.
     if (!map.current || !isLoaded) return;
-    const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
-    if (source) {
+
+    try {
+      if (!map.current.getStyle()) return;
+
+      const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource | undefined;
+      if (!source) return;
       source.setData(toGeoJSON(data) as any);
+    } catch {
+      // Intentionally ignore transient errors while the map is re-initializing.
+      return;
     }
   }, [data, isLoaded]);
 
@@ -168,7 +177,12 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
       });
     });
 
-    return () => map.current?.remove();
+    return () => {
+      popup.current?.remove();
+      popup.current = null;
+      map.current?.remove();
+      map.current = null;
+    };
   }, []);
 
   useEffect(() => {
