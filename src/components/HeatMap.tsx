@@ -1,10 +1,10 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { LocationData, toGeoJSON } from '@/data/demographicData';
 
-// Public Mapbox token - for production, move to environment variable
-const MAPBOX_TOKEN = 'pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNtNWo2azhyYTB1ZTYyanM2NjVyMGsyMzQifQ.z5O_VtG8y0oDG3qh7g6YGQ';
+// Free dark map style from Carto
+const MAP_STYLE = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
 
 interface HeatMapProps {
   data: LocationData[];
@@ -14,14 +14,14 @@ interface HeatMapProps {
 
 export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const popup = useRef<mapboxgl.Popup | null>(null);
+  const map = useRef<maplibregl.Map | null>(null);
+  const popup = useRef<maplibregl.Popup | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   const updateMapData = useCallback(() => {
     if (!map.current || !isLoaded) return;
 
-    const source = map.current.getSource('indian-population') as mapboxgl.GeoJSONSource;
+    const source = map.current.getSource('indian-population') as maplibregl.GeoJSONSource;
     if (source) {
       source.setData(toGeoJSON(data) as any);
     }
@@ -30,11 +30,9 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
-    mapboxgl.accessToken = MAPBOX_TOKEN;
-
-    map.current = new mapboxgl.Map({
+    map.current = new maplibregl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
+      style: MAP_STYLE,
       center: [-98, 45], // Center between US and Canada
       zoom: 3.5,
       minZoom: 2,
@@ -42,7 +40,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
     });
 
     // Add navigation controls
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     map.current.on('load', () => {
       if (!map.current) return;
@@ -157,7 +155,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         minzoom: 7,
         layout: {
           'text-field': ['get', 'city'],
-          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
           'text-size': 12,
           'text-offset': [0, 1.5],
           'text-anchor': 'top',
@@ -179,7 +177,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
       setIsLoaded(true);
 
       // Create popup
-      popup.current = new mapboxgl.Popup({
+      popup.current = new maplibregl.Popup({
         closeButton: false,
         closeOnClick: false,
         className: 'indian-map-popup',
@@ -265,14 +263,14 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
 
       {/* Custom popup styles */}
       <style>{`
-        .indian-map-popup .mapboxgl-popup-content {
+        .indian-map-popup .maplibregl-popup-content {
           background: hsl(220 18% 12%);
           border: 1px solid hsl(220 15% 22%);
           border-radius: 8px;
           padding: 0;
           box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
-        .indian-map-popup .mapboxgl-popup-tip {
+        .indian-map-popup .maplibregl-popup-tip {
           border-top-color: hsl(220 18% 12%);
         }
       `}</style>
