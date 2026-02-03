@@ -19,26 +19,23 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
 
   const updateMapData = useCallback(() => {
     if (!map.current || !isLoaded) return;
-    // Guard against style not being ready (happens during HMR)
-    try {
-      if (!map.current.getStyle()) return;
-      const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
-      if (source) {
-        source.setData(toGeoJSON(data) as any);
-      }
-    } catch (error) {
-      console.warn("Map not ready for data update:", error);
+    const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
+    if (source) {
+      source.setData(toGeoJSON(data) as any);
     }
   }, [data, isLoaded]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    // Detect mobile for initial view
+    const isMobile = window.innerWidth < 768;
+
     map.current = new maplibregl.Map({
       container: mapContainer.current,
       style: MAP_STYLE,
-      center: [-98, 39],
-      zoom: 4,
+      center: isMobile ? [-95, 45] : [-98, 39], // Shift center for mobile
+      zoom: isMobile ? 2.5 : 3.8, // Zoom out more on mobile
       minZoom: 2,
       maxZoom: 12,
       antialias: true,
@@ -52,20 +49,20 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         data: toGeoJSON(data) as any,
       });
 
-      // 1. DENSITY GLOW (Ambient Filler)
+      // 1. AMBIENT GLOW (Reduced for mobile)
       map.current.addLayer({
         id: "population-glow",
         type: "circle",
         source: "indian-population",
         paint: {
-          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 60, 10, 240],
+          "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 30, 10, 120],
           "circle-color": "#FF9933",
-          "circle-blur": 2.5,
-          "circle-opacity": 0.1,
+          "circle-blur": 2.0,
+          "circle-opacity": 0.05,
         },
       });
 
-      // 2. FLUID HEATMAP
+      // 2. REFINED HEATMAP (Scale reduced for mobile)
       map.current.addLayer({
         id: "indian-population-heat",
         type: "heatmap",
@@ -79,57 +76,55 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             0,
             0,
             10000,
-            0.3,
-            100000,
-            0.7,
-            800000,
+            0.2,
+            500000,
             1,
           ],
-          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 5, 3, 9, 5],
+          // REDUCED INTENSITY: Prevents the "whiteout" effect
+          "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 0.5, 5, 1.2, 9, 2],
           "heatmap-color": [
             "interpolate",
             ["linear"],
             ["heatmap-density"],
             0,
             "rgba(0,0,0,0)",
-            0.1,
+            0.15,
             "rgba(30, 64, 175, 0.2)",
-            0.3,
-            "rgba(255, 153, 51, 0.5)",
-            0.6,
-            "rgba(255, 87, 34, 0.8)",
+            0.4,
+            "rgba(255, 153, 51, 0.6)",
+            0.7,
+            "rgba(255, 87, 34, 0.85)",
             0.9,
-            "rgba(255, 255, 255, 0.9)",
+            "rgba(255, 255, 255, 0.95)",
             1,
             "rgba(255, 255, 255, 1)",
           ],
-          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 35, 4, 100, 7, 130, 9, 50],
-          "heatmap-opacity": 0.85,
+          // REFINED RADIUS: Tighter blobs that don't overwhelm small screens
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 8, 3, 20, 5, 45, 8, 80, 12, 30],
+          "heatmap-opacity": 0.8,
         },
       });
 
-      // 3. EMISSIVE POINTS
+      // 3. EMISSIVE POINTS (More visible on hover/zoom)
       map.current.addLayer({
         id: "indian-population-point",
         type: "circle",
         source: "indian-population",
-        minzoom: 5,
+        minzoom: 4,
         paint: {
           "circle-radius": [
             "interpolate",
             ["linear"],
             ["zoom"],
-            5,
-            ["interpolate", ["linear"], ["to-number", ["get", "indianPopulation"]], 10000, 2, 800000, 8],
+            4,
+            3,
             10,
-            ["interpolate", ["linear"], ["to-number", ["get", "indianPopulation"]], 10000, 8, 800000, 35],
+            ["interpolate", ["linear"], ["to-number", ["get", "indianPopulation"]], 10000, 8, 800000, 30],
           ],
           "circle-color": "#FF9933",
-          "circle-stroke-width": 1.5,
+          "circle-stroke-width": 1,
           "circle-stroke-color": "#ffffff",
-          "circle-stroke-opacity": 0.5,
-          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 5, 0, 7, 0.8],
-          "circle-blur": 0.1,
+          "circle-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0, 6, 0.8],
         },
       });
 
@@ -147,7 +142,6 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         map.current.getCanvas().style.cursor = "crosshair";
         const props = e.features[0].properties as any;
 
-        // This HTML structure now uses explicit white/slate colors to avoid "empty box" looks
         popup.current
           ?.setLngLat((e.features[0].geometry as any).coordinates)
           .setHTML(
@@ -183,12 +177,23 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#05080a]">
-      <div ref={mapContainer} className="absolute inset-0 grayscale-[10%] contrast-[110%] brightness-[90%]" />
+      <div ref={mapContainer} className="absolute inset-0 grayscale-[10%] contrast-[110%] brightness-[95%]" />
+
+      {/* Mobile-Friendly Legend */}
+      <div className="absolute bottom-6 right-6 md:right-12 z-10 glass-panel p-3 rounded-lg border border-white/10 hidden sm:block">
+        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-2">Population Density</p>
+        <div className="h-2 w-32 bg-gradient-to-r from-blue-900 via-orange-500 to-white rounded-full" />
+        <div className="flex justify-between mt-1 text-[8px] text-slate-500 font-bold">
+          <span>LOW</span>
+          <span>HIGH</span>
+        </div>
+      </div>
+
       {!isLoaded && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50">
+        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center z-50">
           <div className="flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-[10px] uppercase tracking-[0.4em] font-black text-orange-500">Analysing Geo-Data</p>
+            <div className="w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+            <p className="text-[10px] uppercase tracking-[0.4em] font-black text-orange-500">Mapping Diaspora</p>
           </div>
         </div>
       )}
