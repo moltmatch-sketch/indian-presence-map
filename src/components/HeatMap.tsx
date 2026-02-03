@@ -66,9 +66,9 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             ['linear'],
             ['get', 'indianPopulation'],
             0, 0,
-            50000, 0.3,
-            100000, 0.5,
-            300000, 0.8,
+            50000, 0.7,
+            100000, 0.9,
+            300000, 1,
             850000, 1
           ],
           // Increase the heatmap color weight by zoom level
@@ -76,8 +76,8 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             'interpolate',
             ['linear'],
             ['zoom'],
-            0, 0.5,
-            5, 1.5,
+            0, 1,
+            5, 2,
             9, 3
           ],
           // Color ramp for heatmap - vibrant saffron/orange theme
@@ -85,12 +85,13 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             'interpolate',
             ['linear'],
             ['heatmap-density'],
-            0, 'rgba(0, 0, 0, 0)',
-            0.1, 'rgba(103, 169, 207, 0.4)',
-            0.3, 'rgba(255, 235, 153, 0.6)',
-            0.5, 'rgba(255, 183, 77, 0.7)',
-            0.7, 'rgba(255, 138, 76, 0.85)',
-            0.9, 'rgba(255, 87, 34, 0.95)',
+            // IMPORTANT: we start with a non-zero alpha so sparse point sets still show
+            0, 'rgba(103, 169, 207, 0.25)',
+            0.02, 'rgba(103, 169, 207, 0.45)',
+            0.12, 'rgba(255, 235, 153, 0.65)',
+            0.35, 'rgba(255, 183, 77, 0.78)',
+            0.6, 'rgba(255, 138, 76, 0.9)',
+            0.85, 'rgba(255, 87, 34, 0.97)',
             1, 'rgba(213, 0, 0, 1)'
           ],
           // Larger radius for more visible heatmap
@@ -115,22 +116,22 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         },
       });
 
-      // Add circle layer for zoomed in view
+      // Add circle layer for all zoom levels (fallback so data is always visible)
       map.current.addLayer({
         id: 'indian-population-point',
         type: 'circle',
         source: 'indian-population',
-        minzoom: 6,
         paint: {
           // Size by population
           'circle-radius': [
             'interpolate',
             ['linear'],
             ['get', 'indianPopulation'],
-            10000, 8,
-            50000, 15,
-            100000, 22,
-            250000, 30
+            10000, 4,
+            50000, 8,
+            100000, 12,
+            250000, 16,
+            850000, 22
           ],
           // Color by percentage
           'circle-color': [
@@ -144,11 +145,13 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
           ],
           'circle-stroke-color': '#ffffff',
           'circle-stroke-width': 2,
+          // Keep points visible while zoomed out, then increase opacity as you zoom in
           'circle-opacity': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            6, 0,
+            0, 0.35,
+            5, 0.55,
             8, 0.9
           ],
         },
