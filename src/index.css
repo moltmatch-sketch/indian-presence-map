@@ -2,71 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Indian Diaspora Map - Dark Theme with Saffron Accents */
+/* Indian Diaspora Map - Professional Dashboard Theme */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap");
 
 @layer base {
   :root {
-    /* Dark background palette */
-    --background: 220 20% 8%;
-    --foreground: 210 20% 95%;
+    /* Refined Dark Palette */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
 
-    --card: 220 18% 12%;
-    --card-foreground: 210 20% 95%;
+    --card: 222 47% 7%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 220 18% 10%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 222 47% 5%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Saffron/Orange primary - inspired by Indian flag */
-    --primary: 28 90% 55%;
-    --primary-foreground: 220 20% 8%;
+    /* Saffron Primary - #FF9933 */
+    --primary: 28 100% 60%;
+    --primary-foreground: 222 47% 4%;
 
-    /* Deep blue secondary */
-    --secondary: 220 18% 18%;
-    --secondary-foreground: 210 20% 90%;
+    --secondary: 217 32% 12%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 15% 20%;
-    --muted-foreground: 215 15% 55%;
+    --muted: 217 32% 15%;
+    --muted-foreground: 215 20% 65%;
 
-    /* Saffron accent */
-    --accent: 28 85% 50%;
-    --accent-foreground: 220 20% 8%;
+    --accent: 28 100% 60%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 210 20% 98%;
+    --border: 217 32% 14%;
+    --input: 217 32% 14%;
+    --ring: 28 100% 60%;
 
-    --border: 220 15% 22%;
-    --input: 220 15% 20%;
-    --ring: 28 90% 55%;
-
-    --radius: 0.5rem;
-
-    /* Custom tokens for the map interface */
-    --sidebar-background: 220 18% 10%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 28 90% 55%;
-    --sidebar-primary-foreground: 220 20% 8%;
-    --sidebar-accent: 220 15% 18%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 15% 20%;
-    --sidebar-ring: 28 90% 55%;
-
-    /* Heat map colors */
-    --heat-low: 200 60% 50%;
-    --heat-medium: 45 85% 55%;
-    --heat-high: 28 90% 55%;
-    --heat-intense: 15 95% 50%;
-
-    /* Gradients */
-    --gradient-saffron: linear-gradient(135deg, hsl(28 90% 55%), hsl(38 95% 60%));
-    --gradient-sidebar: linear-gradient(180deg, hsl(220 18% 12%), hsl(220 20% 8%));
-    --gradient-card: linear-gradient(135deg, hsl(220 18% 14%), hsl(220 18% 10%));
-  }
-
-  .dark {
-    --background: 220 20% 8%;
-    --foreground: 210 20% 95%;
+    --radius: 0.75rem;
   }
 }
 
@@ -77,119 +46,77 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    @apply tracking-tight;
   }
 }
 
 @layer components {
-  /* Custom scrollbar for the sidebar */
+  /* --- NEW: Professional Glassmorphism Panel --- */
+  .glass-sidebar {
+    @apply bg-card/60 border-r border-white/5;
+    backdrop-filter: blur(24px) saturate(160%);
+    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Custom scrollbar for a clean UI */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--sidebar-background));
+    background: transparent;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 3px;
+    @apply bg-white/10 rounded-full;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    @apply bg-primary/40;
   }
 
-  /* Filter chip styles */
+  /* --- Refined Filter Chips --- */
   .filter-chip {
-    @apply px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200;
-    @apply bg-secondary text-secondary-foreground;
-    @apply hover:bg-accent hover:text-accent-foreground;
-    @apply border border-border;
+    @apply px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300;
+    @apply bg-secondary/50 text-muted-foreground border border-white/5;
+    @apply hover:bg-secondary hover:text-white uppercase tracking-wider;
   }
 
   .filter-chip-active {
-    @apply bg-primary text-primary-foreground border-primary;
-    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    @apply bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20;
   }
 
-  /* Glow effects */
-  .glow-saffron {
-    box-shadow: 0 0 30px hsl(var(--primary) / 0.4),
-                0 0 60px hsl(var(--primary) / 0.2);
+  /* --- MapLibre Control Overrides --- */
+  .maplibregl-ctrl-group {
+    @apply !bg-card/80 !backdrop-blur-md !border !border-white/10 !shadow-2xl !rounded-xl !overflow-hidden;
   }
 
-  /* Map controls styling */
-  .mapboxgl-ctrl-group {
-    background: hsl(var(--card)) !important;
-    border: 1px solid hsl(var(--border)) !important;
-    border-radius: var(--radius) !important;
+  .maplibregl-ctrl-group button {
+    @apply !bg-transparent hover:!bg-white/10 !transition-colors;
   }
 
-  .mapboxgl-ctrl-group button {
-    background-color: transparent !important;
-    border: none !important;
-  }
-
-  .mapboxgl-ctrl-group button:hover {
-    background-color: hsl(var(--secondary)) !important;
-  }
-
-  .mapboxgl-ctrl-group button + button {
-    border-top: 1px solid hsl(var(--border)) !important;
-  }
-
-  /* Attribution styling */
-  .mapboxgl-ctrl-attrib {
-    background: hsl(var(--background) / 0.8) !important;
-    color: hsl(var(--muted-foreground)) !important;
-    font-size: 10px !important;
-  }
-
-  .mapboxgl-ctrl-attrib a {
-    color: hsl(var(--accent)) !important;
+  .maplibregl-ctrl-group button + button {
+    @apply !border-t !border-white/5;
   }
 }
 
 @layer utilities {
-  .text-gradient-saffron {
-    background: var(--gradient-saffron);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .text-glow-saffron {
+    text-shadow: 0 0 15px hsl(var(--primary) / 0.5);
   }
 
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-slide-in {
-    animation: slideIn 0.4s ease-out;
-  }
-
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(-20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    opacity: 0.03;
   }
 }
