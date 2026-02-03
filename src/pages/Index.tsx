@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { HeatMap } from '@/components/HeatMap';
 import { FilterSidebar } from '@/components/FilterSidebar';
 import { LocationDetailPanel } from '@/components/LocationDetailPanel';
-import { mockLocationData, getFilteredData, FilterState, LocationData } from '@/data/demographicData';
+import { locationData, getFilteredData, FilterState, LocationData } from '@/data/demographicData';
 import { Menu, X } from 'lucide-react';
 
 const Index = () => {
