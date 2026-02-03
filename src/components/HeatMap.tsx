@@ -47,117 +47,128 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
     map.current.on('load', () => {
       if (!map.current) return;
 
-      // Add the data source
+      // Initialize with EMPTY data - the updateMapData effect will populate it
       map.current.addSource('indian-population', {
         type: 'geojson',
-        data: toGeoJSON(data) as any,
-      });
-
-      // Add heat map layer with enhanced visibility
-      map.current.addLayer({
-        id: 'indian-population-heat',
-        type: 'heatmap',
-        source: 'indian-population',
-        maxzoom: 9,
-        paint: {
-          // Increase the heatmap weight based on population
-          'heatmap-weight': [
-            'interpolate',
-            ['linear'],
-            ['get', 'indianPopulation'],
-            0, 0,
-            50000, 0.7,
-            100000, 0.9,
-            300000, 1,
-            850000, 1
-          ],
-          // Increase the heatmap color weight by zoom level
-          'heatmap-intensity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 1,
-            5, 2,
-            9, 3
-          ],
-          // Color ramp for heatmap - vibrant saffron/orange theme
-          'heatmap-color': [
-            'interpolate',
-            ['linear'],
-            ['heatmap-density'],
-            // IMPORTANT: we start with a non-zero alpha so sparse point sets still show
-            0, 'rgba(103, 169, 207, 0.25)',
-            0.02, 'rgba(103, 169, 207, 0.45)',
-            0.12, 'rgba(255, 235, 153, 0.65)',
-            0.35, 'rgba(255, 183, 77, 0.78)',
-            0.6, 'rgba(255, 138, 76, 0.9)',
-            0.85, 'rgba(255, 87, 34, 0.97)',
-            1, 'rgba(213, 0, 0, 1)'
-          ],
-          // Larger radius for more visible heatmap
-          'heatmap-radius': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 30,
-            3, 50,
-            5, 70,
-            9, 90
-          ],
-          // Transition from heatmap to circle layer by zoom level
-          'heatmap-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            6, 1,
-            8, 0.6,
-            9, 0
-          ],
+        data: {
+          type: 'FeatureCollection',
+          features: [],
         },
       });
 
-      // Add circle layer for all zoom levels (fallback so data is always visible)
-      map.current.addLayer({
-        id: 'indian-population-point',
-        type: 'circle',
-        source: 'indian-population',
-        paint: {
-          // Size by population
-          'circle-radius': [
-            'interpolate',
-            ['linear'],
-            ['get', 'indianPopulation'],
-            10000, 4,
-            50000, 8,
-            100000, 12,
-            250000, 16,
-            850000, 22
-          ],
-          // Color by percentage
-          'circle-color': [
-            'interpolate',
-            ['linear'],
-            ['get', 'percentIndian'],
-            0, '#67A9CF',
-            10, '#FDDB99',
-            20, '#EF8A62',
-            35, '#FF6B35'
-          ],
-          'circle-stroke-color': '#ffffff',
-          'circle-stroke-width': 2,
-          // Keep points visible while zoomed out, then increase opacity as you zoom in
-          'circle-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0, 0.35,
-            5, 0.55,
-            8, 0.9
-          ],
-        },
-      });
+      // Find the first symbol layer to insert heatmap below labels
+      const layers = map.current.getStyle().layers;
+      let firstSymbolId: string | undefined;
+      for (const layer of layers || []) {
+        if (layer.type === 'symbol') {
+          firstSymbolId = layer.id;
+          break;
+        }
+      }
 
-      // Add labels for cities
+      // Add heat map layer with to-number coercion for string safety
+      map.current.addLayer(
+        {
+          id: 'indian-population-heat',
+          type: 'heatmap',
+          source: 'indian-population',
+          maxzoom: 9,
+          paint: {
+            // Use to-number to handle string values from GeoJSON properties
+            'heatmap-weight': [
+              'interpolate',
+              ['linear'],
+              ['to-number', ['get', 'indianPopulation']],
+              0, 0,
+              50000, 0.7,
+              100000, 0.9,
+              300000, 1,
+              850000, 1
+            ],
+            'heatmap-intensity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 1,
+              5, 2,
+              9, 3
+            ],
+            'heatmap-color': [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0, 'rgba(103, 169, 207, 0.25)',
+              0.02, 'rgba(103, 169, 207, 0.45)',
+              0.12, 'rgba(255, 235, 153, 0.65)',
+              0.35, 'rgba(255, 183, 77, 0.78)',
+              0.6, 'rgba(255, 138, 76, 0.9)',
+              0.85, 'rgba(255, 87, 34, 0.97)',
+              1, 'rgba(213, 0, 0, 1)'
+            ],
+            'heatmap-radius': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 30,
+              3, 50,
+              5, 70,
+              9, 90
+            ],
+            'heatmap-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              6, 1,
+              8, 0.6,
+              9, 0
+            ],
+          },
+        },
+        firstSymbolId // Insert below labels
+      );
+
+      // Add circle layer with to-number coercion
+      map.current.addLayer(
+        {
+          id: 'indian-population-point',
+          type: 'circle',
+          source: 'indian-population',
+          paint: {
+            'circle-radius': [
+              'interpolate',
+              ['linear'],
+              ['to-number', ['get', 'indianPopulation']],
+              10000, 4,
+              50000, 8,
+              100000, 12,
+              250000, 16,
+              850000, 22
+            ],
+            'circle-color': [
+              'interpolate',
+              ['linear'],
+              ['to-number', ['get', 'percentIndian']],
+              0, '#67A9CF',
+              10, '#FDDB99',
+              20, '#EF8A62',
+              35, '#FF6B35'
+            ],
+            'circle-stroke-color': '#ffffff',
+            'circle-stroke-width': 2,
+            'circle-opacity': [
+              'interpolate',
+              ['linear'],
+              ['zoom'],
+              0, 0.35,
+              5, 0.55,
+              8, 0.9
+            ],
+          },
+        },
+        firstSymbolId // Insert below labels
+      );
+
+      // Add labels for cities (on top)
       map.current.addLayer({
         id: 'indian-population-labels',
         type: 'symbol',
@@ -209,7 +220,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             <p class="text-orange-400 font-semibold text-xl">${Number(props.indianPopulation).toLocaleString()}</p>
             <p class="text-gray-400 text-sm">Indian Population</p>
             <div class="mt-2 pt-2 border-t border-gray-700">
-              <p class="text-gray-300 text-sm">${props.percentIndian}% of total population</p>
+              <p class="text-gray-300 text-sm">${Number(props.percentIndian).toFixed(1)}% of total population</p>
             </div>
           </div>
         `;
@@ -223,14 +234,27 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         popup.current?.remove();
       });
 
-      // Add click interactions
+      // Add click interactions - use a ref to get current data
       map.current.on('click', 'indian-population-point', (e) => {
-        if (!e.features?.[0]) return;
+        if (!e.features?.[0] || !onLocationSelect) return;
         
         const props = e.features[0].properties as any;
-        const location = data.find(d => d.id === props.id);
-        if (location && onLocationSelect) {
-          onLocationSelect(location);
+        // Find location by id from current data
+        const source = map.current?.getSource('indian-population') as maplibregl.GeoJSONSource;
+        if (source) {
+          onLocationSelect({
+            id: props.id,
+            city: props.city,
+            state: props.state,
+            country: props.country,
+            latitude: (e.features[0].geometry as any).coordinates[1],
+            longitude: (e.features[0].geometry as any).coordinates[0],
+            indianPopulation: Number(props.indianPopulation),
+            totalPopulation: Number(props.totalPopulation),
+            percentIndian: Number(props.percentIndian),
+            communities: JSON.parse(props.communities || '[]'),
+            pointsOfInterest: JSON.parse(props.pointsOfInterest || '[]'),
+          });
         }
       });
     });
@@ -239,7 +263,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [onLocationSelect]);
 
   // Update data when it changes
   useEffect(() => {
