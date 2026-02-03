@@ -46,8 +46,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         data: toGeoJSON(data) as any,
       });
 
-      // 1. DENSITY GLOW (The "Filler" Layer)
-      // This creates a soft ambient glow under the cities so the map isn't pitch black.
+      // 1. DENSITY GLOW (Ambient Filler)
       map.current.addLayer({
         id: "population-glow",
         type: "circle",
@@ -56,7 +55,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
           "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 60, 10, 240],
           "circle-color": "#FF9933",
           "circle-blur": 2.5,
-          "circle-opacity": 0.08,
+          "circle-opacity": 0.1,
         },
       });
 
@@ -67,7 +66,6 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         source: "indian-population",
         maxzoom: 9,
         paint: {
-          // Logarithmic-style weight: Give smaller towns more visibility
           "heatmap-weight": [
             "interpolate",
             ["linear"],
@@ -89,35 +87,22 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             0,
             "rgba(0,0,0,0)",
             0.1,
-            "rgba(30, 64, 175, 0.2)", // Ambient Blue
+            "rgba(30, 64, 175, 0.2)",
             0.3,
-            "rgba(255, 153, 51, 0.5)", // Saffron
+            "rgba(255, 153, 51, 0.5)",
             0.6,
-            "rgba(255, 87, 34, 0.8)", // Deep Orange
+            "rgba(255, 87, 34, 0.8)",
             0.9,
-            "rgba(255, 255, 255, 0.9)", // White Hot
+            "rgba(255, 255, 255, 0.9)",
             1,
             "rgba(255, 255, 255, 1)",
           ],
-          // BRIDGE THE GAP: Large radius at zoom 4-6 creates the fluid look
-          "heatmap-radius": [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            0,
-            30,
-            4,
-            90, // East Coast cities will now "touch"
-            7,
-            120,
-            9,
-            40,
-          ],
+          "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 35, 4, 100, 7, 130, 9, 50],
           "heatmap-opacity": 0.85,
         },
       });
 
-      // 3. EMISSIVE POINTS (Visible when zooming in)
+      // 3. EMISSIVE POINTS
       map.current.addLayer({
         id: "indian-population-point",
         type: "circle",
@@ -155,6 +140,8 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         if (!map.current || !e.features?.[0]) return;
         map.current.getCanvas().style.cursor = "crosshair";
         const props = e.features[0].properties as any;
+
+        // This HTML structure now uses explicit white/slate colors to avoid "empty box" looks
         popup.current
           ?.setLngLat((e.features[0].geometry as any).coordinates)
           .setHTML(
