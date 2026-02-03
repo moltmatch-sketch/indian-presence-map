@@ -1,0 +1,281 @@
+import { useRef, useEffect, useState, useCallback } from 'react';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+import { LocationData, toGeoJSON } from '@/data/demographicData';
+
+// Public Mapbox token - for production, move to environment variable
+const MAPBOX_TOKEN = 'pk.eyJ1IjoibG92YWJsZS1kZW1vIiwiYSI6ImNtNWo2azhyYTB1ZTYyanM2NjVyMGsyMzQifQ.z5O_VtG8y0oDG3qh7g6YGQ';
+
+interface HeatMapProps {
+  data: LocationData[];
+  onLocationSelect?: (location: LocationData | null) => void;
+  selectedLocation?: LocationData | null;
+}
+
+export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const popup = useRef<mapboxgl.Popup | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const updateMapData = useCallback(() => {
+    if (!map.current || !isLoaded) return;
+
+    const source = map.current.getSource('indian-population') as mapboxgl.GeoJSONSource;
+    if (source) {
+      source.setData(toGeoJSON(data) as any);
+    }
+  }, [data, isLoaded]);
+
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [-98, 45], // Center between US and Canada
+      zoom: 3.5,
+      minZoom: 2,
+      maxZoom: 12,
+    });
+
+    // Add navigation controls
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    map.current.on('load', () => {
+      if (!map.current) return;
+
+      // Add the data source
+      map.current.addSource('indian-population', {
+        type: 'geojson',
+        data: toGeoJSON(data) as any,
+      });
+
+      // Add heat map layer
+      map.current.addLayer({
+        id: 'indian-population-heat',
+        type: 'heatmap',
+        source: 'indian-population',
+        maxzoom: 9,
+        paint: {
+          // Increase the heatmap weight based on population
+          'heatmap-weight': [
+            'interpolate',
+            ['linear'],
+            ['get', 'indianPopulation'],
+            0, 0,
+            50000, 0.5,
+            100000, 0.75,
+            250000, 1
+          ],
+          // Increase the heatmap color weight by zoom level
+          'heatmap-intensity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 1,
+            9, 3
+          ],
+          // Color ramp for heatmap
+          'heatmap-color': [
+            'interpolate',
+            ['linear'],
+            ['heatmap-density'],
+            0, 'rgba(33, 102, 172, 0)',
+            0.2, 'rgba(103, 169, 207, 0.6)',
+            0.4, 'rgba(209, 229, 240, 0.7)',
+            0.6, 'rgba(253, 219, 199, 0.8)',
+            0.8, 'rgba(239, 138, 98, 0.9)',
+            1, 'rgba(255, 107, 53, 1)'
+          ],
+          // Adjust the heatmap radius by zoom level
+          'heatmap-radius': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 20,
+            5, 40,
+            9, 60
+          ],
+          // Transition from heatmap to circle layer by zoom level
+          'heatmap-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            7, 1,
+            9, 0
+          ],
+        },
+      });
+
+      // Add circle layer for zoomed in view
+      map.current.addLayer({
+        id: 'indian-population-point',
+        type: 'circle',
+        source: 'indian-population',
+        minzoom: 6,
+        paint: {
+          // Size by population
+          'circle-radius': [
+            'interpolate',
+            ['linear'],
+            ['get', 'indianPopulation'],
+            10000, 8,
+            50000, 15,
+            100000, 22,
+            250000, 30
+          ],
+          // Color by percentage
+          'circle-color': [
+            'interpolate',
+            ['linear'],
+            ['get', 'percentIndian'],
+            0, '#67A9CF',
+            10, '#FDDB99',
+            20, '#EF8A62',
+            35, '#FF6B35'
+          ],
+          'circle-stroke-color': '#ffffff',
+          'circle-stroke-width': 2,
+          'circle-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            6, 0,
+            8, 0.9
+          ],
+        },
+      });
+
+      // Add labels for cities
+      map.current.addLayer({
+        id: 'indian-population-labels',
+        type: 'symbol',
+        source: 'indian-population',
+        minzoom: 7,
+        layout: {
+          'text-field': ['get', 'city'],
+          'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+          'text-size': 12,
+          'text-offset': [0, 1.5],
+          'text-anchor': 'top',
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1,
+          'text-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            7, 0,
+            8, 1
+          ],
+        },
+      });
+
+      setIsLoaded(true);
+
+      // Create popup
+      popup.current = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        className: 'indian-map-popup',
+      });
+
+      // Add hover interactions
+      map.current.on('mouseenter', 'indian-population-point', (e) => {
+        if (!map.current || !e.features?.[0]) return;
+        
+        map.current.getCanvas().style.cursor = 'pointer';
+        
+        const feature = e.features[0];
+        const coords = (feature.geometry as any).coordinates.slice();
+        const props = feature.properties as any;
+        
+        const popupContent = `
+          <div class="p-3 min-w-[200px]">
+            <h3 class="font-bold text-lg text-white mb-1">${props.city}, ${props.state}</h3>
+            <p class="text-orange-400 font-semibold text-xl">${Number(props.indianPopulation).toLocaleString()}</p>
+            <p class="text-gray-400 text-sm">Indian Population</p>
+            <div class="mt-2 pt-2 border-t border-gray-700">
+              <p class="text-gray-300 text-sm">${props.percentIndian}% of total population</p>
+            </div>
+          </div>
+        `;
+        
+        popup.current?.setLngLat(coords).setHTML(popupContent).addTo(map.current!);
+      });
+
+      map.current.on('mouseleave', 'indian-population-point', () => {
+        if (!map.current) return;
+        map.current.getCanvas().style.cursor = '';
+        popup.current?.remove();
+      });
+
+      // Add click interactions
+      map.current.on('click', 'indian-population-point', (e) => {
+        if (!e.features?.[0]) return;
+        
+        const props = e.features[0].properties as any;
+        const location = data.find(d => d.id === props.id);
+        if (location && onLocationSelect) {
+          onLocationSelect(location);
+        }
+      });
+    });
+
+    return () => {
+      map.current?.remove();
+      map.current = null;
+    };
+  }, []);
+
+  // Update data when it changes
+  useEffect(() => {
+    updateMapData();
+  }, [updateMapData]);
+
+  // Fly to selected location
+  useEffect(() => {
+    if (selectedLocation && map.current) {
+      map.current.flyTo({
+        center: [selectedLocation.longitude, selectedLocation.latitude],
+        zoom: 9,
+        duration: 1500,
+      });
+    }
+  }, [selectedLocation]);
+
+  return (
+    <div className="w-full h-full relative">
+      <div ref={mapContainer} className="absolute inset-0" />
+      
+      {/* Loading overlay */}
+      {!isLoaded && (
+        <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Custom popup styles */}
+      <style>{`
+        .indian-map-popup .mapboxgl-popup-content {
+          background: hsl(220 18% 12%);
+          border: 1px solid hsl(220 15% 22%);
+          border-radius: 8px;
+          padding: 0;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+        .indian-map-popup .mapboxgl-popup-tip {
+          border-top-color: hsl(220 18% 12%);
+        }
+      `}</style>
+    </div>
+  );
+};
