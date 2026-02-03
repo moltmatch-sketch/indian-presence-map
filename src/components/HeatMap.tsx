@@ -18,15 +18,27 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
   const [isLoaded, setIsLoaded] = useState(false);
 
   const updateMapData = useCallback(() => {
-    if (!map.current || !isLoaded) return;
-    const source = map.current.getSource("indian-population") as maplibregl.GeoJSONSource;
-    if (source) {
+    const m = map.current;
+    // During Hot Module Replacement or early lifecycle phases the map instance can exist
+    // while its style isn't ready yet; calling getSource() will throw `this.style is undefined`.
+    if (!m || !isLoaded) return;
+
+    try {
+      if (!m.isStyleLoaded?.() || !m.loaded?.()) return;
+      const source = m.getSource("indian-population") as maplibregl.GeoJSONSource | undefined;
+      if (!source) return;
       source.setData(toGeoJSON(data) as any);
+    } catch {
+      // Map is in an intermediate state (e.g., HMR / style reload). Skip this tick.
+      return;
     }
   }, [data, isLoaded]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+
+    // Prevent stale state (esp. during HMR) from allowing updates before the new map is ready.
+    setIsLoaded(false);
 
     map.current = new maplibregl.Map({
       container: mapContainer.current,
@@ -168,7 +180,13 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
       });
     });
 
-    return () => map.current?.remove();
+    return () => {
+      popup.current?.remove();
+      popup.current = null;
+      map.current?.remove();
+      map.current = null;
+      setIsLoaded(false);
+    };
   }, []);
 
   useEffect(() => {
