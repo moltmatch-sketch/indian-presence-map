@@ -16,7 +16,13 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<maplibregl.Map | null>(null);
   const popup = useRef<maplibregl.Popup | null>(null);
+  const dataRef = useRef<LocationData[]>(data);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Keep dataRef in sync with prop
+  useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   // Update map data when filtered data changes
   const updateMapData = useCallback(() => {
@@ -24,10 +30,11 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
 
     const source = map.current.getSource('indian-population') as maplibregl.GeoJSONSource;
     if (source) {
-      const geoJSON = toGeoJSON(data);
+      const geoJSON = toGeoJSON(dataRef.current);
+      console.log('Updating map with', dataRef.current.length, 'locations');
       source.setData(geoJSON as any);
     }
-  }, [data, isLoaded]);
+  }, [isLoaded]);
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
@@ -56,15 +63,7 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
         },
       });
 
-      // Find the first symbol layer to insert heatmap below labels
-      const layers = map.current.getStyle().layers;
-      let firstSymbolId: string | undefined;
-      for (const layer of layers || []) {
-        if (layer.type === 'symbol') {
-          firstSymbolId = layer.id;
-          break;
-        }
-      }
+      // Add layers on top of basemap (default behavior adds to top)
 
       // Add heat map layer with to-number coercion for string safety
       map.current.addLayer(
@@ -124,7 +123,6 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             ],
           },
         },
-        firstSymbolId // Insert below labels
       );
 
       // Add circle layer with to-number coercion
@@ -165,7 +163,6 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
             ],
           },
         },
-        firstSymbolId // Insert below labels
       );
 
       // Add labels for cities (on top)
@@ -265,10 +262,12 @@ export const HeatMap = ({ data, onLocationSelect, selectedLocation }: HeatMapPro
     };
   }, [onLocationSelect]);
 
-  // Update data when it changes
+  // Update data when it changes or map loads
   useEffect(() => {
-    updateMapData();
-  }, [updateMapData]);
+    if (isLoaded) {
+      updateMapData();
+    }
+  }, [isLoaded, data, updateMapData]);
 
   // Fly to selected location
   useEffect(() => {
