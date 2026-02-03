@@ -228,12 +228,7 @@ export const FilterSidebar = ({
 
           {/* POI Filter */}
           <Collapsible open={expandedSections.pois} onOpenChange={() => toggleSection('pois')}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full py-2">
-              <span className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                Points of Interest
-              </span>
-              {expandedSections.pois ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </CollapsibleTrigger>
+            
             <CollapsibleContent className="space-y-2 pt-2">
               {POI_TYPES.map(poi => <label key={poi.value} className="flex items-center gap-3 py-1.5 cursor-pointer group">
                   <Checkbox className="border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary" />
