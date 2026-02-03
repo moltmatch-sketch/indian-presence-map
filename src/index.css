@@ -2,121 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Indian Diaspora Map - Professional Dashboard Theme */
-
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Grotesk:wght@500;700&display=swap");
 
 @layer base {
   :root {
-    /* Refined Dark Palette */
-    --background: 222 47% 4%;
+    --background: 222 47% 2%; /* Near Black */
     --foreground: 210 40% 98%;
-
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222 47% 5%;
-    --popover-foreground: 210 40% 98%;
-
-    /* Saffron Primary - #FF9933 */
-    --primary: 28 100% 60%;
-    --primary-foreground: 222 47% 4%;
-
-    --secondary: 217 32% 12%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 15%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 28 100% 60%;
-    --accent-foreground: 210 40% 98%;
-
-    --border: 217 32% 14%;
-    --input: 217 32% 14%;
-    --ring: 28 100% 60%;
-
-    --radius: 0.75rem;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
+    --card: 222 47% 6%;
+    --primary: 28 100% 60%; /* Saffron */
+    --border: 217 32% 12%;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", system-ui, sans-serif;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    font-family: "Space Grotesk", system-ui, sans-serif;
-    @apply tracking-tight;
+    font-family: "Inter", sans-serif;
   }
 }
 
 @layer components {
-  /* --- NEW: Professional Glassmorphism Panel --- */
+  /* High-end Sidebar Glassmorphism */
   .glass-sidebar {
-    @apply bg-card/60 border-r border-white/5;
-    backdrop-filter: blur(24px) saturate(160%);
-    box-shadow: 20px 0 50px rgba(0, 0, 0, 0.4);
+    @apply bg-[#0f172a]/60 border-r border-white/10;
+    backdrop-filter: blur(32px) saturate(150%);
+    box-shadow: 25px 0 50px -15px rgba(0, 0, 0, 0.7);
   }
 
-  /* Custom scrollbar for a clean UI */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+  /* Professional Popup Content */
+  .maplibregl-popup-content {
+    @apply bg-[#0f172a]/90 border border-white/10 rounded-2xl p-0 !important;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6) !important;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+  .maplibregl-popup-tip {
+    border-top-color: rgba(15, 23, 42, 0.9) !important;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-white/10 rounded-full;
+  /* UI Data Elements */
+  .popup-inner {
+    @apply p-5 min-w-[220px] flex flex-col;
   }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary/40;
+  .popup-loc-tag {
+    @apply text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1;
   }
-
-  /* --- Refined Filter Chips --- */
-  .filter-chip {
-    @apply px-4 py-1.5 rounded-lg text-xs font-bold transition-all duration-300;
-    @apply bg-secondary/50 text-muted-foreground border border-white/5;
-    @apply hover:bg-secondary hover:text-white uppercase tracking-wider;
+  .popup-val-container {
+    @apply flex items-baseline gap-2 mb-4;
   }
-
-  .filter-chip-active {
-    @apply bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20;
+  .popup-main-val {
+    @apply text-3xl font-black text-white leading-none tracking-tighter;
   }
-
-  /* --- MapLibre Control Overrides --- */
-  .maplibregl-ctrl-group {
-    @apply !bg-card/80 !backdrop-blur-md !border !border-white/10 !shadow-2xl !rounded-xl !overflow-hidden;
+  .popup-sub-tag {
+    @apply text-[10px] font-bold text-orange-500;
   }
-
-  .maplibregl-ctrl-group button {
-    @apply !bg-transparent hover:!bg-white/10 !transition-colors;
+  .popup-stat {
+    @apply flex justify-between items-center pt-3 border-t border-white/5;
   }
-
-  .maplibregl-ctrl-group button + button {
-    @apply !border-t !border-white/5;
+  .stat-label {
+    @apply text-[9px] font-bold text-slate-500 uppercase;
   }
-}
-
-@layer utilities {
-  .text-glow-saffron {
-    text-shadow: 0 0 15px hsl(var(--primary) / 0.5);
-  }
-
-  .bg-noise {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.03;
+  .stat-val {
+    @apply text-xs font-bold text-slate-200;
   }
 }
